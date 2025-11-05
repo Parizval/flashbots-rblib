@@ -25,7 +25,7 @@ use {
 	std::sync::Arc,
 };
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 struct CustomPlatform;
 
 impl Platform for CustomPlatform {
@@ -278,6 +278,12 @@ fn transfer_tx(
 
 	OpTransactionSigned::new_unhashed(tx, sig) //
 		.with_signer(signer.address())
+}
+
+impl PartialEq for CustomBundleType {
+	fn eq(&self, other: &Self) -> bool {
+		self.hash() == other.hash()
+	}
 }
 
 #[derive(Debug)]

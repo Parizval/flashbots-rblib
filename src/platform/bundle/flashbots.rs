@@ -238,6 +238,13 @@ impl<P: Platform> FlashbotsBundle<P> {
 	}
 }
 
+/// `PartialEq` by bundle hash
+impl<P: Platform> PartialEq for FlashbotsBundle<P> {
+	fn eq(&self, other: &Self) -> bool {
+		self.hash() == other.hash()
+	}
+}
+
 impl<P: Platform> Serialize for FlashbotsBundle<P> {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
