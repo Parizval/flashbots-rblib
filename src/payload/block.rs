@@ -69,6 +69,7 @@ impl<P: Platform> BlockContext<P> {
 		attribs: types::PayloadBuilderAttributes<P>,
 		base_state: StateProviderBox,
 		chainspec: Arc<types::ChainSpec<P>>,
+		cached: Option<ExecutionCache>,
 	) -> Result<Self, Error<P>> {
 		let block_env = P::next_block_environment_context::<P>(
 			&chainspec,
@@ -81,8 +82,11 @@ impl<P: Platform> BlockContext<P> {
 			.next_evm_env(&parent, &block_env)
 			.map_err(Error::EvmEnv)?;
 
+		let execution_cached = cached.unwrap_or_default();
+		let provider =
+			CachedStateProvider::new_with_caches(base_state, execution_cached);
 		let mut base_state = State::builder()
-			.with_database(StateProviderDatabase(base_state))
+			.with_database(StateProviderDatabase(provider))
 			.with_bundle_update()
 			.build();
 
@@ -202,7 +206,8 @@ struct BlockContextInner<P: Platform> {
 	///
 	/// This state has no changes made to it during the payload building process
 	/// through any of the created checkpoints.
-	base_state: State<StateProviderDatabase<StateProviderBox>>,
+	base_state:
+		State<StateProviderDatabase<CachedStateProvider<StateProviderBox>>>,
 
 	/// The EVM factory configured for the environment in which we are building
 	/// the payload. This type is used to create individual EVM instances that
